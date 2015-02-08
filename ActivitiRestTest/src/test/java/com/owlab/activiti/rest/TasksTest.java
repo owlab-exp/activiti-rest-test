@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 
-import junit.framework.Assert;
-
 import org.apache.http.client.ClientProtocolException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -15,6 +13,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.owlab.util.JsonNodeUtil;
 
 
@@ -28,7 +27,8 @@ public class TasksTest {
 //	}
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		tasks = new Tasks("http://58.237.227.195:28081/activiti-rest/service");
+		//tasks = new Tasks("http://58.237.227.195:28081/activiti-rest/service");
+		tasks = new Tasks("http://localhost:8080/activiti-rest/service");
 		mapper = new ObjectMapper();
 		
 	}
@@ -41,6 +41,7 @@ public class TasksTest {
 	public void testGetToDoListOverJson() throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException {
 		//fail("Not yet implemented"); // TODO
 		JsonNode requestNode = mapper.createObjectNode();
+		((ObjectNode)requestNode).put("isFinishedTasks", "true");
 		
 		JsonNode response = tasks.getToDoListOverJson(requestNode, "kermit", "kermit");
 		

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.owlab.util.JsonNodeUtil;
 import com.owlab.util.WeakRestClient;
 
 public class Tasks {
@@ -31,13 +32,13 @@ public class Tasks {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		JsonNode typeOfTasks = requestNode.path("isFinishedTasks");
+		JsonNode taskQuery = requestNode.path("isFinishedTasks");
 //		if (typeOfTasks.isMissingNode() || typeOfTasks.isNull()) {
 //
 //		} else if (typeOfTasks.asText().equalsIgnoreCase("false")) {
-		if (typeOfTasks.isMissingNode() || typeOfTasks.isNull() || typeOfTasks.asText().equalsIgnoreCase("false")) {
+		if (taskQuery.isMissingNode() || taskQuery.isNull() || taskQuery.asText().equalsIgnoreCase("false")) {
 			// default request, return not completed tasks
-			JsonNode filterContainer = makeFilterForUnfinishedTasks(requestNode);
+			JsonNode filterContainer = makeFilterForUnfinishedTasks(requestNode, authId);
 			// JsonNode hasFilter = filterContainer.path("hasFilter");
 			JsonNode taskListPage = postCandidateOrAssignedTasks(
 					filterContainer.get("filter"), authId, authPassword);
@@ -57,6 +58,7 @@ public class Tasks {
 			 * customers = mapper.createArrayNode(); ArrayNode products =
 			 * mapper.createArrayNode();
 			 */
+			JsonNodeUtil.beautifulPrint(basicLists);
 			if (basicLists.path("statusCode").asInt() != 200) {
 				// exit from here
 			}
@@ -100,9 +102,9 @@ public class Tasks {
 			// to resend the search criteria given
 			result.set("filter", filterContainer.get("filter"));
 			// to draw task list table
-			result.set("taskListPage", taskListPage);
+			result.set("taskTablePage", taskListPage);
 
-		} else if (typeOfTasks.asText().equalsIgnoreCase("finished")) {
+		} else if (taskQuery.asText().equalsIgnoreCase("true")) {
 			// return finished tasks
 			JsonNode filterContainer = makeFilterForFinishedTasks(requestNode,
 					authId);
@@ -158,14 +160,14 @@ public class Tasks {
 			// to resend the search criteria given
 			result.set("filter", filterContainer.get("filter"));
 			// to draw task list table
-			result.set("taskListPage", taskListPage);
+			result.set("taskTablePage", taskListPage);
 
 		}
 
 		return result;
 	}
 
-	public JsonNode makeFilterForUnfinishedTasks(JsonNode requestNode) {
+	public JsonNode makeFilterForUnfinishedTasks(JsonNode requestNode, String authId) {
 		ObjectNode result = null;
 
 		// JsonNode category = requestNode.path("category");
@@ -196,7 +198,7 @@ public class Tasks {
 		// tasks
 		// filter.put("finished", true); // to get finished tasks
 		filter.put("includeProcessVariables", true); // to get process variables
-		filter.put("candidateOrAssigned", true); // to get process variables
+		filter.put("candidateOrAssigned", authId); // to get process variables
 
 		// if(!(finished.isMissingNode() || finished.isNull())) {
 		// filter.put("finished", finished.asText());
@@ -278,7 +280,8 @@ public class Tasks {
 			processInstanceVariables.add(processInstanceVariable);
 		}
 
-		filter.set("processInstanceVariables", processInstanceVariables);
+		if(processInstanceVariables.size() > 0)
+			filter.set("processInstanceVariables", processInstanceVariables);
 
 		result.put("hasFilter", hasFilter);
 		result.set("filter", filter);
@@ -399,7 +402,9 @@ public class Tasks {
 			processVariables.add(processVariable);
 		}
 
-		filter.set("processVariables", processVariables);
+		if(processVariables.size() > 0)
+			filter.set("processVariables", processVariables);
+		//filter.set("processVariables", processVariables);
 
 		result.put("hasFilter", hasFilter);
 		result.set("filter", filter);
@@ -409,22 +414,30 @@ public class Tasks {
 	}
 
 	public JsonNode postCandidateOrAssignedTasks(JsonNode filter,
-			String userId, String password) throws ClientProtocolException,
+			String authId, String authPassword) throws ClientProtocolException,
 			UnsupportedEncodingException, JsonProcessingException,
 			URISyntaxException, IOException {
-		JsonNode rootNode = null;
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode result = mapper.createObjectNode();
 
-		String endPointExt = "/runtime/tasks";
+		//JsonNodeUtil.beautifulPrint(filter);
+		String endPointExt = "/query/tasks";
 		WeakRestClient.RestResponse response = WeakRestClient
 				.post(this.activitiServiceUri + endPointExt)
 				.header("content-type", "application/json")
-				.basicAuth(userId, password).bodyAsJsonNode(filter).execute();
+				.basicAuth(authId, authPassword)
+				.bodyAsJsonNode(filter)
+				//.body(filter.toString())
+				.execute();
 
+		result.put("statusCode", response.statusCode);
 		if (response.statusCode == 200) {
-
+			result.set("taskTable", response.asJsonNode());
+		} else {
+			result.put("message",  response.responseBody);
 		}
 
-		return rootNode;
+		return result;
 	}
 
 	public int getCandidateOrAssignedTasksTotalSize(String authId,
@@ -490,6 +503,11 @@ public class Tasks {
 			result.set("customers", customers);
 			result.set("products", products);
 
+			Set<String> processDefinitionUrlSet = new HashSet<String>();
+			Set<String> taskCategorySet = new HashSet<String>();
+			Map<String, String> customerMap = new HashMap<String, String>();
+			Map<String, String> productMap = new HashMap<String, String>();
+			
 			// fill the individual lists
 			if (dataNode.isArray()) {
 				JsonNode node = null;
@@ -499,13 +517,15 @@ public class Tasks {
 					if (!node.isMissingNode())
 						taskUrls.add(node.asText());
 
-					node = task.path("processDefinition");
+					node = task.path("processDefinitionUrl");
 					if (!node.isMissingNode())
-						processDefinitions.add(node.asText());
+						//processDefinitions.add(node.asText());
+						processDefinitionUrlSet.add(node.asText());
 
 					node = task.path("category");
 					if (!node.isMissingNode())
-						categories.add(node.asText());
+						//categories.add(node.asText());
+						taskCategorySet.add(node.asText());
 
 					node = task.path("variables");
 					if (node.isArray()) {
@@ -558,19 +578,53 @@ public class Tasks {
 						
 						
 						if(customerId != null && customerName != null) {
-							ObjectNode customer = mapper.createObjectNode();
-							customer.put("custId", customerId.asText());
-							customer.put("custNm", customerName.asText());
-							customers.add(customer);
+							//ObjectNode customer = mapper.createObjectNode();
+//							customer.put("custId", customerId.asText());
+//							customer.put("custNm", customerName.asText());
+//							customers.add(customer);
+							customerMap.put(customerId.asText(), customerName.asText());
 						}
 						
 						if(productCd != null && productName != null) {
-							ObjectNode product = mapper.createObjectNode();
-							product.put("pdCd", productCd.asText());
-							product.put("pdNm", productName.asText());
-							products.add(product);
+//							ObjectNode product = mapper.createObjectNode();
+//							product.put("pdCd", productCd.asText());
+//							product.put("pdNm", productName.asText());
+//							products.add(product);
+							productMap.put(productCd.asText(), productName.asText());
 						}
 
+					}
+				}
+				
+				if(processDefinitionUrlSet.size() > 0) {
+					for(String processDefinition : processDefinitionUrlSet) {
+						processDefinitions.add(processDefinition);
+					}
+				}
+				
+				if(taskCategorySet.size() > 0) {
+					for(String taskCategory : taskCategorySet) {
+						categories.add(taskCategory);
+					}
+				}
+				
+				if(customerMap.size() > 0) {
+					Set<String> keySet = customerMap.keySet();
+					for(String key: keySet) {
+						ObjectNode customer = mapper.createObjectNode();
+						customer.put("custId", key);
+						customer.put("custNm", customerMap.get(key));
+						customers.add(customer);
+					}
+				}
+				
+				if(productMap.size() > 0) {
+					Set<String> keySet = productMap.keySet();
+					for(String key: keySet) {
+						ObjectNode product = mapper.createObjectNode();
+						product.put("pdCd", key);
+						product.put("pdNm", productMap.get(key));
+						products.add(product);
 					}
 				}
 			}
@@ -585,20 +639,24 @@ public class Tasks {
 			String authPassword) throws ClientProtocolException,
 			UnsupportedEncodingException, JsonProcessingException,
 			URISyntaxException, IOException {
-		JsonNode rootNode = null;
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode result = mapper.createObjectNode();
 
-		String endPointExt = "/history/historic-task-instances";
+		String endPointExt = "/query/historic-task-instances";
 		WeakRestClient.RestResponse response = WeakRestClient
 				.post(this.activitiServiceUri + endPointExt)
 				.header("content-type", "application/json")
 				.basicAuth(authId, authPassword).bodyAsJsonNode(filter)
 				.execute();
 
+		result.put("statusCode", response.statusCode);
 		if (response.statusCode == 200) {
-
+			result.set("taskTable", response.asJsonNode());
+		} else {
+			result.put("message",  response.responseBody);
 		}
 
-		return rootNode;
+		return result;
 	}
 
 	public int getFinishedTasksTotalSize(String authId, String authPassword)
@@ -916,8 +974,9 @@ public class Tasks {
 		if (taskUrl == null || taskUrl.isArray())
 			return null;
 
+		//JsonNodeUtil.beautifulPrint(taskUrl);
 		WeakRestClient.RestResponse response = WeakRestClient
-				.get(taskUrl.get("url").asText() + "/identitylinks")
+				.get(taskUrl.asText() + "/identitylinks")
 				.basicAuth(authId, authPassword).execute();
 
 		if (response.statusCode == 200) {

@@ -119,6 +119,7 @@ public class WeakRestClient {
 			final ObjectMapper mapper = new ObjectMapper();
 			final Object o = mapper.treeToValue(jsonNode, Object.class);
 			final String contents = mapper.writeValueAsString(o);
+			System.out.println(contents);
 			this.httpEntityEnclosingRequestBase.setEntity(new StringEntity(contents));
 		}
 		if(this.requestType == RequestType.NON_ENTITY_ENCLOSING)
