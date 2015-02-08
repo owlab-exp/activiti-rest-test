@@ -199,9 +199,9 @@ public class WeakRestClientTest {
 						variableValueNode = valueNode.get(j).get("value");
 
 						if (variableNameNode.isNull()
-								&& variableNameNode.isMissingNode()
-								&& variableValueNode.isNull()
-								&& variableValueNode.isMissingNode())
+								|| variableNameNode.isMissingNode()
+								|| variableValueNode.isNull()
+								|| variableValueNode.isMissingNode())
 							continue;
 
 						variableName = variableNameNode.asText();

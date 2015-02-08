@@ -114,6 +114,18 @@ public class WeakRestClient {
 		return this;
 	}
 	
+	public WeakRestClient bodyAsJsonNode(JsonNode jsonNode) throws UnsupportedEncodingException, JsonProcessingException {
+		if(this.requestType == RequestType.ENTITY_ENCLOSING) {
+			final ObjectMapper mapper = new ObjectMapper();
+			final Object o = mapper.treeToValue(jsonNode, Object.class);
+			final String contents = mapper.writeValueAsString(o);
+			this.httpEntityEnclosingRequestBase.setEntity(new StringEntity(contents));
+		}
+		if(this.requestType == RequestType.NON_ENTITY_ENCLOSING)
+			System.out.println("Entity enclosing not supported in this type of http method: " + this.httpRequestBase.getMethod());
+		return this;
+	}
+	
 	public static class RestResponse {
 		public final int statusCode;
 		public final String responseBody;
