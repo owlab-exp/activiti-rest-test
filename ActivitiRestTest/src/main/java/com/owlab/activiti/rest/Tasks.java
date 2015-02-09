@@ -53,7 +53,7 @@ public class Tasks {
 			 * customers = mapper.createArrayNode(); ArrayNode products =
 			 * mapper.createArrayNode();
 			 */
-			JsonNodeUtil.beautifulPrint(basicLists);
+			//JsonNodeUtil.beautifulPrint(basicLists);
 			if (basicLists.path("statusCode").asInt() != 200) {
 				// exit from here
 			}
