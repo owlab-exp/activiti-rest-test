@@ -25,32 +25,27 @@ public class Tasks {
 		this.activitiServiceUri = activitiServiceUri;
 	}
 
-	public JsonNode getToDoListOverJson(JsonNode requestNode, String authId,
-			String authPassword) throws ClientProtocolException,
-			UnsupportedEncodingException, JsonProcessingException,
+	public JsonNode getToDoListOverJson(JsonNode requestNode, String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException,
 			URISyntaxException, IOException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
 		JsonNode taskQuery = requestNode.path("isFinishedTasks");
-//		if (typeOfTasks.isMissingNode() || typeOfTasks.isNull()) {
-//
-//		} else if (typeOfTasks.asText().equalsIgnoreCase("false")) {
+		// if (typeOfTasks.isMissingNode() || typeOfTasks.isNull()) {
+		//
+		// } else if (typeOfTasks.asText().equalsIgnoreCase("false")) {
 		if (taskQuery.isMissingNode() || taskQuery.isNull() || taskQuery.asText().equalsIgnoreCase("false")) {
 			// default request, return not completed tasks
 			JsonNode filterContainer = makeFilterForUnfinishedTasks(requestNode, authId);
 			// JsonNode hasFilter = filterContainer.path("hasFilter");
-			JsonNode taskListPage = postCandidateOrAssignedTasks(
-					filterContainer.get("filter"), authId, authPassword);
+			JsonNode taskListPage = postCandidateOrAssignedTasks(filterContainer.get("filter"), authId, authPassword);
 
 			// Because the post http call may not give total size, we have to
 			// get total size with another REST call.
-			int totalSize = getCandidateOrAssignedTasksTotalSize(authId,
-					"kermit");
+			int totalSize = getCandidateOrAssignedTasksTotalSize(authId, "kermit");
 
 			// Get various data to be used for filtering of future requests
-			JsonNode basicLists = getBasicListsForFilteringOfCandidateOrAssignedTasks(
-					totalSize, authId, authPassword);
+			JsonNode basicLists = getBasicListsForFilteringOfCandidateOrAssignedTasks(totalSize, authId, authPassword);
 			/*
 			 * lists: ArrayNode taskUrls = mapper.createArrayNode(); ArrayNode
 			 * categories = mapper.createArrayNode(); ArrayNode
@@ -68,26 +63,20 @@ public class Tasks {
 			JsonNode products = basicLists.get("products");
 
 			JsonNode taskUrls = basicLists.get("taskUrls");
-			JsonNode identityLinks = getIdentityLinksOfTasks(taskUrls, authId,
-					authPassword);
+			JsonNode identityLinks = getIdentityLinksOfTasks(taskUrls, authId, authPassword);
 
 			// get list of candidate users and groups information
-			JsonNode candidateUsersOrGroups = getCandidateUsersOrGroups(
-					identityLinks, authId, authPassword);
+			JsonNode candidateUsersOrGroups = getCandidateUsersOrGroups(identityLinks, authId, authPassword);
 
-			JsonNode processDefinitionUrls = basicLists
-					.get("processDefinitions");
-			JsonNode processKeyNameCategories = getProcessKeyNameCategories(
-					processDefinitionUrls, authId, authPassword);
+			JsonNode processDefinitionUrls = basicLists.get("processDefinitions");
+			JsonNode processKeyNameCategories = getProcessKeyNameCategories(processDefinitionUrls, authId, authPassword);
 
 			if (processKeyNameCategories.path("statusCode").asInt() != 200) {
 				// exit from here
 			}
 
-			JsonNode processKeyAndNames = processKeyNameCategories
-					.get("processKeyAndNames");
-			JsonNode processCategories = processKeyNameCategories
-					.get("processCategories");
+			JsonNode processKeyAndNames = processKeyNameCategories.get("processKeyAndNames");
+			JsonNode processCategories = processKeyNameCategories.get("processCategories");
 
 			result.put("statusCode", 200);
 			// to resend previous query type
@@ -106,16 +95,13 @@ public class Tasks {
 
 		} else if (taskQuery.asText().equalsIgnoreCase("true")) {
 			// return finished tasks
-			JsonNode filterContainer = makeFilterForFinishedTasks(requestNode,
-					authId);
+			JsonNode filterContainer = makeFilterForFinishedTasks(requestNode, authId);
 
-			JsonNode taskListPage = postFinishedTasks(
-					filterContainer.get("filter"), authId, authPassword);
+			JsonNode taskListPage = postFinishedTasks(filterContainer.get("filter"), authId, authPassword);
 
 			int totalSize = getFinishedTasksTotalSize(authId, authPassword);
 
-			JsonNode basicLists = getBasicListsForFilteringOfCandidateOrAssignedTasks(
-					totalSize, authId, authPassword);
+			JsonNode basicLists = getBasicListsForFilteringOfCandidateOrAssignedTasks(totalSize, authId, authPassword);
 			/*
 			 * lists: ArrayNode taskUrls = mapper.createArrayNode(); ArrayNode
 			 * categories = mapper.createArrayNode(); ArrayNode
@@ -131,19 +117,15 @@ public class Tasks {
 			JsonNode customers = basicLists.get("customers");
 			JsonNode products = basicLists.get("products");
 
-			JsonNode processDefinitionUrls = basicLists
-					.get("processDefinitions");
-			JsonNode processKeyNameCategories = getProcessKeyNameCategories(
-					processDefinitionUrls, authId, authPassword);
+			JsonNode processDefinitionUrls = basicLists.get("processDefinitions");
+			JsonNode processKeyNameCategories = getProcessKeyNameCategories(processDefinitionUrls, authId, authPassword);
 
 			if (processKeyNameCategories.path("statusCode").asInt() != 200) {
 				// exit from here
 			}
 
-			JsonNode processKeyAndNames = processKeyNameCategories
-					.get("processKeyAndNames");
-			JsonNode processCategories = processKeyNameCategories
-					.get("processCategories");
+			JsonNode processKeyAndNames = processKeyNameCategories.get("processKeyAndNames");
+			JsonNode processCategories = processKeyNameCategories.get("processCategories");
 
 			result.put("statusCode", 200);
 			// to resend previous query type
@@ -173,8 +155,7 @@ public class Tasks {
 		// JsonNode category = requestNode.path("category");
 		JsonNode candidateUser = requestNode.path("candidateUser");
 		JsonNode candidateGroup = requestNode.path("candidateGroup");
-		JsonNode processDefinitionKey = requestNode
-				.path("processDefinitionKey");
+		JsonNode processDefinitionKey = requestNode.path("processDefinitionKey");
 		JsonNode dueAfter = requestNode.path("dueDateAfter");
 		JsonNode dueBefore = requestNode.path("dueDateBefore");
 		// JsonNode taskCompletedAfter = requestNode.path("taskCompletedAfter");
@@ -210,8 +191,7 @@ public class Tasks {
 		// hasFilter = true;
 		// }
 
-		if (!(processDefinitionKey.isMissingNode() || processDefinitionKey
-				.isNull())) {
+		if (!(processDefinitionKey.isMissingNode() || processDefinitionKey.isNull())) {
 			filter.put("processDefinitionKey", processDefinitionKey.asText());
 			hasFilter = true;
 		}
@@ -280,7 +260,7 @@ public class Tasks {
 			processInstanceVariables.add(processInstanceVariable);
 		}
 
-		if(processInstanceVariables.size() > 0)
+		if (processInstanceVariables.size() > 0)
 			filter.set("processInstanceVariables", processInstanceVariables);
 
 		result.put("hasFilter", hasFilter);
@@ -290,16 +270,14 @@ public class Tasks {
 
 	}
 
-	public JsonNode makeFilterForFinishedTasks(JsonNode requestNode,
-			String authId) {
+	public JsonNode makeFilterForFinishedTasks(JsonNode requestNode, String authId) {
 		ObjectNode result = null;
 
 		// JsonNode finished = requestNode.path("finished");
 		// JsonNode category = requestNode.path("category");
 		// JsonNode candidateUser = requestNode.path("candidateUser");
 		// JsonNode candidateGroup = requestNode.path("candidateGroup");
-		JsonNode processDefinitionKey = requestNode
-				.path("processDefinitionKey");
+		JsonNode processDefinitionKey = requestNode.path("processDefinitionKey");
 		JsonNode dueDateAfter = requestNode.path("dueDateAfter");
 		JsonNode dueDateBefore = requestNode.path("dueDateBefore");
 		JsonNode taskCompletedAfter = requestNode.path("taskCompletedAfter");
@@ -343,8 +321,7 @@ public class Tasks {
 		// hasFilter = true;
 		// }
 
-		if (!(processDefinitionKey.isMissingNode() || processDefinitionKey
-				.isNull())) {
+		if (!(processDefinitionKey.isMissingNode() || processDefinitionKey.isNull())) {
 			filter.put("processDefinitionKey", processDefinitionKey.asText());
 			hasFilter = true;
 		}
@@ -364,8 +341,7 @@ public class Tasks {
 			hasFilter = true;
 		}
 
-		if (!(taskCompletedBefore.isMissingNode() || taskCompletedBefore
-				.isNull())) {
+		if (!(taskCompletedBefore.isMissingNode() || taskCompletedBefore.isNull())) {
 			filter.put("taskCompletedBefore", taskCompletedBefore.asText());
 			hasFilter = true;
 		}
@@ -402,9 +378,9 @@ public class Tasks {
 			processVariables.add(processVariable);
 		}
 
-		if(processVariables.size() > 0)
+		if (processVariables.size() > 0)
 			filter.set("processVariables", processVariables);
-		//filter.set("processVariables", processVariables);
+		// filter.set("processVariables", processVariables);
 
 		result.put("hasFilter", hasFilter);
 		result.set("filter", filter);
@@ -413,43 +389,33 @@ public class Tasks {
 
 	}
 
-	public JsonNode postCandidateOrAssignedTasks(JsonNode filter,
-			String authId, String authPassword) throws ClientProtocolException,
-			UnsupportedEncodingException, JsonProcessingException,
+	public JsonNode postCandidateOrAssignedTasks(JsonNode filter, String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException,
 			URISyntaxException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		//JsonNodeUtil.beautifulPrint(filter);
+		// JsonNodeUtil.beautifulPrint(filter);
 		String endPointExt = "/query/tasks";
-		WeakRestClient.RestResponse response = WeakRestClient
-				.post(this.activitiServiceUri + endPointExt)
-				.header("content-type", "application/json")
-				.basicAuth(authId, authPassword)
+		WeakRestClient.RestResponse response = WeakRestClient.post(this.activitiServiceUri + endPointExt).header("content-type", "application/json").basicAuth(authId, authPassword)
 				.bodyAsJsonNode(filter)
-				//.body(filter.toString())
+				// .body(filter.toString())
 				.execute();
 
 		result.put("statusCode", response.statusCode);
 		if (response.statusCode == 200) {
 			result.set("taskTable", response.asJsonNode());
 		} else {
-			result.put("message",  response.responseBody);
+			result.put("message", response.responseBody);
 		}
 
 		return result;
 	}
 
-	public int getCandidateOrAssignedTasksTotalSize(String authId,
-			String authPassword) throws JsonProcessingException, IOException,
-			URISyntaxException {
+	public int getCandidateOrAssignedTasksTotalSize(String authId, String authPassword) throws JsonProcessingException, IOException, URISyntaxException {
 		int totalSize = -1;
 		// String serviceBase = "http://localhost:8080/activiti-rest/service";
 		String endPointExt = "/runtime/tasks";
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(this.activitiServiceUri + endPointExt)
-				.basicAuth(authId, authPassword)
-				.queryString("candidateOrAssigned", authId).execute();
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt).basicAuth(authId, authPassword).queryString("candidateOrAssigned", authId).execute();
 
 		if (response.statusCode == 200) {
 			JsonNode rootNode = response.asJsonNode();
@@ -459,9 +425,7 @@ public class Tasks {
 		return totalSize;
 	}
 
-	public JsonNode getBasicListsForFilteringOfCandidateOrAssignedTasks(
-			int totalTasksSize, String authId, String authPassword)
-			throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getBasicListsForFilteringOfCandidateOrAssignedTasks(int totalTasksSize, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -473,12 +437,8 @@ public class Tasks {
 			return result;
 		}
 
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(this.activitiServiceUri + endPointExt)
-				.basicAuth(authId, authPassword)
-				.queryString("candidateOrAssigned", authId)
-				.queryString("includeProcessVariables", "true")
-				.queryString("size", "" + totalTasksSize).execute();
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt).basicAuth(authId, authPassword).queryString("candidateOrAssigned", authId)
+				.queryString("includeProcessVariables", "true").queryString("size", "" + totalTasksSize).execute();
 
 		// set status code to see if the processing has no error
 		result.put("statusCode", response.statusCode);
@@ -507,7 +467,7 @@ public class Tasks {
 			Set<String> taskCategorySet = new HashSet<String>();
 			Map<String, String> customerMap = new HashMap<String, String>();
 			Map<String, String> productMap = new HashMap<String, String>();
-			
+
 			// fill the individual lists
 			if (dataNode.isArray()) {
 				JsonNode node = null;
@@ -519,12 +479,12 @@ public class Tasks {
 
 					node = task.path("processDefinitionUrl");
 					if (!node.isMissingNode())
-						//processDefinitions.add(node.asText());
+						// processDefinitions.add(node.asText());
 						processDefinitionUrlSet.add(node.asText());
 
 					node = task.path("category");
-					if (!node.isMissingNode())
-						//categories.add(node.asText());
+					if (!node.isMissingNode() && !node.isNull())
+						// categories.add(node.asText());
 						taskCategorySet.add(node.asText());
 
 					node = task.path("variables");
@@ -538,89 +498,77 @@ public class Tasks {
 
 						for (JsonNode variable : (ArrayNode) node) {
 							variableName = variable.path("name");
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("custId")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("custId")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									customerId = variableValue;
 							}
 
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("custNm")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("custNm")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									customerName = variableValue;
 							}
 
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("pdCd")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("pdCd")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									productCd = variableValue;
 							}
 
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("pdNm")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("pdNm")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									productName = variableValue;
 							}
 						}
 
-						
-						
-						if(customerId != null && customerName != null) {
-							//ObjectNode customer = mapper.createObjectNode();
-//							customer.put("custId", customerId.asText());
-//							customer.put("custNm", customerName.asText());
-//							customers.add(customer);
-							customerMap.put(customerId.asText(), customerName.asText());
+						if (customerId != null && customerName != null) {
+							// ObjectNode customer = mapper.createObjectNode();
+							// customer.put("custId", customerId.asText());
+							// customer.put("custNm", customerName.asText());
+							// customers.add(customer);
+							if(!customerId.asText().equals(""))
+								customerMap.put(customerId.asText(), customerName.asText());
 						}
-						
-						if(productCd != null && productName != null) {
-//							ObjectNode product = mapper.createObjectNode();
-//							product.put("pdCd", productCd.asText());
-//							product.put("pdNm", productName.asText());
-//							products.add(product);
-							productMap.put(productCd.asText(), productName.asText());
+
+						if (productCd != null && productName != null) {
+							// ObjectNode product = mapper.createObjectNode();
+							// product.put("pdCd", productCd.asText());
+							// product.put("pdNm", productName.asText());
+							// products.add(product);
+							if(!productCd.asText().equals(""))
+								productMap.put(productCd.asText(), productName.asText());
 						}
 
 					}
 				}
-				
-				if(processDefinitionUrlSet.size() > 0) {
-					for(String processDefinition : processDefinitionUrlSet) {
+
+				if (processDefinitionUrlSet.size() > 0) {
+					for (String processDefinition : processDefinitionUrlSet) {
 						processDefinitions.add(processDefinition);
 					}
 				}
-				
-				if(taskCategorySet.size() > 0) {
-					for(String taskCategory : taskCategorySet) {
+
+				if (taskCategorySet.size() > 0) {
+					for (String taskCategory : taskCategorySet) {
 						categories.add(taskCategory);
 					}
 				}
-				
-				if(customerMap.size() > 0) {
+
+				if (customerMap.size() > 0) {
 					Set<String> keySet = customerMap.keySet();
-					for(String key: keySet) {
+					for (String key : keySet) {
 						ObjectNode customer = mapper.createObjectNode();
 						customer.put("custId", key);
 						customer.put("custNm", customerMap.get(key));
 						customers.add(customer);
 					}
 				}
-				
-				if(productMap.size() > 0) {
+
+				if (productMap.size() > 0) {
 					Set<String> keySet = productMap.keySet();
-					for(String key: keySet) {
+					for (String key : keySet) {
 						ObjectNode product = mapper.createObjectNode();
 						product.put("pdCd", key);
 						product.put("pdNm", productMap.get(key));
@@ -635,39 +583,31 @@ public class Tasks {
 		return result;
 	}
 
-	public JsonNode postFinishedTasks(JsonNode filter, String authId,
-			String authPassword) throws ClientProtocolException,
-			UnsupportedEncodingException, JsonProcessingException,
-			URISyntaxException, IOException {
+	public JsonNode postFinishedTasks(JsonNode filter, String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException,
+			IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
 		String endPointExt = "/query/historic-task-instances";
-		WeakRestClient.RestResponse response = WeakRestClient
-				.post(this.activitiServiceUri + endPointExt)
-				.header("content-type", "application/json")
-				.basicAuth(authId, authPassword).bodyAsJsonNode(filter)
-				.execute();
+		WeakRestClient.RestResponse response = WeakRestClient.post(this.activitiServiceUri + endPointExt).header("content-type", "application/json").basicAuth(authId, authPassword)
+				.bodyAsJsonNode(filter).execute();
 
 		result.put("statusCode", response.statusCode);
 		if (response.statusCode == 200) {
 			result.set("taskTable", response.asJsonNode());
 		} else {
-			result.put("message",  response.responseBody);
+			result.put("message", response.responseBody);
 		}
 
 		return result;
 	}
 
-	public int getFinishedTasksTotalSize(String authId, String authPassword)
-			throws ClientProtocolException, UnsupportedEncodingException,
-			JsonProcessingException, URISyntaxException, IOException {
+	public int getFinishedTasksTotalSize(String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException {
 		int totalSize = -1;
 
 		String endPointExt = "/history/historic-task-instances";
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(this.activitiServiceUri + endPointExt)
-				// .header("content-type", "application/json")
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt)
+		// .header("content-type", "application/json")
 				.basicAuth(authId, authPassword)
 				// .bodyAsJsonNode(filter)
 				.execute();
@@ -680,9 +620,7 @@ public class Tasks {
 		return totalSize;
 	}
 
-	public JsonNode getBasicListsForFilteringOfFinishedTasks(
-			int totalTasksSize, String authId, String authPassword)
-			throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getBasicListsForFilteringOfFinishedTasks(int totalTasksSize, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -694,13 +632,8 @@ public class Tasks {
 			return result;
 		}
 
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(this.activitiServiceUri + endPointExt)
-				.basicAuth(authId, authPassword)
-				.queryString("taskAssignee", authId)
-				.queryString("includeProcessVariables", "true")
-				.queryString("finished", "true")
-				.queryString("size", "" + totalTasksSize).execute();
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt).basicAuth(authId, authPassword).queryString("taskAssignee", authId)
+				.queryString("includeProcessVariables", "true").queryString("finished", "true").queryString("size", "" + totalTasksSize).execute();
 
 		// set status code to see if the processing has no error
 		result.put("statusCode", response.statusCode);
@@ -754,39 +687,27 @@ public class Tasks {
 
 						for (JsonNode variable : (ArrayNode) node) {
 							variableName = variable.path("name");
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("custId")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("custId")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									customerId = variableValue;
 							}
 
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("custNm")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("custNm")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									customerName = variableValue;
 							}
 
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("pdCd")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("pdCd")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									productCd = variableValue;
 							}
 
-							if (!variableName.isMissingNode()
-									&& !variableName.isNull()
-									&& variableName.asText().equals("pdNm")) {
+							if (!variableName.isMissingNode() && !variableName.isNull() && variableName.asText().equals("pdNm")) {
 								variableValue = variable.path("value");
-								if (!variableValue.isMissingNode()
-										&& !variableValue.isNull())
+								if (!variableValue.isMissingNode() && !variableValue.isNull())
 									productName = variableValue;
 							}
 						}
@@ -811,9 +732,7 @@ public class Tasks {
 		return result;
 	}
 
-	public JsonNode getProcessKeyNameCategories(JsonNode processDefinitionUrls,
-			String authId, String authPassword) throws ClientProtocolException,
-			URISyntaxException, IOException {
+	public JsonNode getProcessKeyNameCategories(JsonNode processDefinitionUrls, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -829,21 +748,16 @@ public class Tasks {
 		if (processDefinitionUrls.isArray()) {
 			// Iterate to get individual process definitions
 			for (JsonNode processDefinitionUrl : processDefinitionUrls) {
-				WeakRestClient.RestResponse response = WeakRestClient
-						.get(processDefinitionUrl.asText())
-						.basicAuth(authId, authPassword).execute();
+				WeakRestClient.RestResponse response = WeakRestClient.get(processDefinitionUrl.asText()).basicAuth(authId, authPassword).execute();
 
 				result.put("statusCode", response.statusCode);
 				if (response.statusCode != 200) {
-					result.put("message",
-							"Error while getting process definitions. Definition url: "
-									+ processDefinitionUrl.asText());
+					result.put("message", "Error while getting process definitions. Definition url: " + processDefinitionUrl.asText());
 					return result;
 				}
 
 				JsonNode rootNode = response.asJsonNode();
-				processKeyAndNamesMap.put(rootNode.path("key").asText(),
-						rootNode.path("name").asText());
+				processKeyAndNamesMap.put(rootNode.path("key").asText(), rootNode.path("name").asText());
 				processCategoriesSet.add(rootNode.path("category").asText());
 			}
 
@@ -944,9 +858,7 @@ public class Tasks {
 	//
 	// }
 
-	public JsonNode getIdentityLinksOfTasks(JsonNode taskUrls, String authId,
-			String authPassword) throws ClientProtocolException,
-			URISyntaxException, IOException {
+	public JsonNode getIdentityLinksOfTasks(JsonNode taskUrls, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		if (taskUrls == null || !taskUrls.isArray()) {
 			return null;
 		}
@@ -957,8 +869,7 @@ public class Tasks {
 		ArrayNode identityLinksOfATask = null;
 
 		for (JsonNode taskUrl : (ArrayNode) taskUrls) {
-			identityLinksOfATask = (ArrayNode) getIdentityLinksOfATask(taskUrl,
-					authId, authPassword);
+			identityLinksOfATask = (ArrayNode) getIdentityLinksOfATask(taskUrl, authId, authPassword);
 
 			for (JsonNode identityLink : identityLinksOfATask) {
 				identityLinks.add(identityLink);
@@ -968,16 +879,12 @@ public class Tasks {
 		return identityLinks;
 	}
 
-	public JsonNode getIdentityLinksOfATask(JsonNode taskUrl, String authId,
-			String authPassword) throws ClientProtocolException,
-			URISyntaxException, IOException {
+	public JsonNode getIdentityLinksOfATask(JsonNode taskUrl, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		if (taskUrl == null || taskUrl.isArray())
 			return null;
 
-		//JsonNodeUtil.beautifulPrint(taskUrl);
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(taskUrl.asText() + "/identitylinks")
-				.basicAuth(authId, authPassword).execute();
+		// JsonNodeUtil.beautifulPrint(taskUrl);
+		WeakRestClient.RestResponse response = WeakRestClient.get(taskUrl.asText() + "/identitylinks").basicAuth(authId, authPassword).execute();
 
 		if (response.statusCode == 200) {
 			return response.asJsonNode();
@@ -986,15 +893,11 @@ public class Tasks {
 		}
 	}
 
-	public JsonNode getUserInfo(String userId, String authId,
-			String authPassword) throws ClientProtocolException,
-			URISyntaxException, IOException {
+	public JsonNode getUserInfo(String userId, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		if (userId == null)
 			return null;
 		String endPointExt = "/identity/users";
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(this.activitiServiceUri + endPointExt + "/" + userId)
-				.basicAuth(authId, authPassword).execute();
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt + "/" + userId).basicAuth(authId, authPassword).execute();
 
 		if (response.statusCode == 200) {
 			return response.asJsonNode();
@@ -1003,15 +906,11 @@ public class Tasks {
 		}
 	}
 
-	public JsonNode getGroupInfo(String groupId, String authId,
-			String authPassword) throws ClientProtocolException,
-			URISyntaxException, IOException {
+	public JsonNode getGroupInfo(String groupId, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		if (groupId == null)
 			return null;
 		String endPointExt = "/identity/groups";
-		WeakRestClient.RestResponse response = WeakRestClient
-				.get(this.activitiServiceUri + endPointExt + "/" + groupId)
-				.basicAuth(authId, authPassword).execute();
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt + "/" + groupId).basicAuth(authId, authPassword).execute();
 
 		if (response.statusCode == 200) {
 			return response.asJsonNode();
@@ -1020,9 +919,7 @@ public class Tasks {
 		}
 	}
 
-	public JsonNode getCandidateUsersOrGroups(JsonNode identityLinks,
-			String authId, String authPassword) throws ClientProtocolException,
-			URISyntaxException, IOException {
+	public JsonNode getCandidateUsersOrGroups(JsonNode identityLinks, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
 		if (identityLinks == null || !identityLinks.isArray())
 			return null;
 
