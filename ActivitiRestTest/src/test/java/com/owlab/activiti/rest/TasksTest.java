@@ -21,10 +21,6 @@ public class TasksTest {
 	private static Tasks tasks;
 	private static ObjectMapper mapper; 
 	
-//	public static void main(String[] args) {
-//		Tasks tasks = new Tasks("http://58.237.227.195:28081/activiti-rest/service");
-//		ObjectMapper mapper = 
-//	}
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		//tasks = new Tasks("http://58.237.227.195:28081/activiti-rest/service");
@@ -38,10 +34,23 @@ public class TasksTest {
 	}
 
 	@Test
-	public void testGetToDoListOverJson() throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException {
+	public void testGetToDoListOverJsonUnFinished() throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException {
 		//fail("Not yet implemented"); // TODO
 		JsonNode requestNode = mapper.createObjectNode();
-		((ObjectNode)requestNode).put("isFinishedTasks", "true");
+		((ObjectNode)requestNode).put("isFinishedTasks", false);
+		
+		JsonNode response = tasks.getToDoListOverJson(requestNode, "kermit", "kermit");
+		
+		//Assert.assertEquals(response.get("statusCode").asInt(), 200);
+		
+		JsonNodeUtil.beautifulPrint(response);
+	}
+	
+	@Test
+	public void testGetToDoListOverJsonFinished() throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException {
+		//fail("Not yet implemented"); // TODO
+		JsonNode requestNode = mapper.createObjectNode();
+		((ObjectNode)requestNode).put("isFinishedTasks", true);
 		
 		JsonNode response = tasks.getToDoListOverJson(requestNode, "kermit", "kermit");
 		

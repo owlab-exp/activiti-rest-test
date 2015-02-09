@@ -30,11 +30,11 @@ public class Tasks {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		JsonNode taskQuery = requestNode.path("isFinishedTasks");
+		JsonNode isForFinishedTasks = requestNode.path("isFinishedTasks");
 		// if (typeOfTasks.isMissingNode() || typeOfTasks.isNull()) {
 		//
 		// } else if (typeOfTasks.asText().equalsIgnoreCase("false")) {
-		if (taskQuery.isMissingNode() || taskQuery.isNull() || taskQuery.asText().equalsIgnoreCase("false")) {
+		if (isForFinishedTasks.isMissingNode() || isForFinishedTasks.isNull() || !isForFinishedTasks.asBoolean()) {
 			// default request, return not completed tasks
 			JsonNode filterContainer = makeFilterForUnfinishedTasks(requestNode, authId);
 			// JsonNode hasFilter = filterContainer.path("hasFilter");
@@ -80,7 +80,7 @@ public class Tasks {
 
 			result.put("statusCode", 200);
 			// to resend previous query type
-			result.put("isFinishedTasks", "false");
+			result.put("isFinishedTasks", requestNode.path("isFinishedTasks").asBoolean());
 			// to set possible filter data on UI
 			result.set("taskCategories", taskCategories);
 			result.set("candidateUsersOrGroups", candidateUsersOrGroups);
@@ -93,7 +93,7 @@ public class Tasks {
 			// to draw task list table
 			result.set("taskTablePage", taskListPage);
 
-		} else if (taskQuery.asText().equalsIgnoreCase("true")) {
+		} else if (isForFinishedTasks.asBoolean()) {
 			// return finished tasks
 			JsonNode filterContainer = makeFilterForFinishedTasks(requestNode, authId);
 
@@ -129,7 +129,7 @@ public class Tasks {
 
 			result.put("statusCode", 200);
 			// to resend previous query type
-			result.put("isFinishedTasks", "false");
+			result.put("isFinishedTasks", requestNode.path("isFinishedTasks").asBoolean());
 			// to set possible filter data on UI
 			result.set("taskCategories", taskCategories);
 
@@ -437,8 +437,12 @@ public class Tasks {
 			return result;
 		}
 
-		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt).basicAuth(authId, authPassword).queryString("candidateOrAssigned", authId)
-				.queryString("includeProcessVariables", "true").queryString("size", "" + totalTasksSize).execute();
+		WeakRestClient.RestResponse response = WeakRestClient.get(this.activitiServiceUri + endPointExt)
+				.basicAuth(authId, authPassword)
+				.queryString("candidateOrAssigned", authId)
+				.queryString("includeProcessVariables", "true")
+				.queryString("size", "" + totalTasksSize)
+				.execute();
 
 		// set status code to see if the processing has no error
 		result.put("statusCode", response.statusCode);

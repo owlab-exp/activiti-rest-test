@@ -34,6 +34,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
+/**
+ * A simple RESTful client for Activiti REST API
+ * Use with your own risks!
+ *  
+ * @author Nemo Hunjae Lee
+ * 
+ * Usuage example:
+ * WeakRestClient.RestRespone respone = WeakRestClient.get(<URL>) // also delete for DELETE method
+ * 											.basicAuth("auth user id", "auth password")
+ * 											.queryString("paramName", "paramValue")
+ * 											.execute();
+  * WeakRestClient.RestRespone respone = WeakRestClient.post(<URL>) // also put for PUT method
+ * 											.header("content-type", "application/json")
+ * 											.basicAuth("auth user id", "auth password")
+ * 											.bodyAsJsonNode(< a JsonNode object>) // or .body(String)
+ * 											.execute();
+ * response.statueCode => HTTP STATUS CODE
+ * response.responseBody => String
+ * response.asJsonNode() => return JsonNode object of the body string
+ *
+ */
 public class WeakRestClient {
 	private enum RequestType {ENTITY_ENCLOSING, NON_ENTITY_ENCLOSING}
 	private RequestType requestType;
@@ -47,6 +68,23 @@ public class WeakRestClient {
 		this.httpClient = new DefaultHttpClient();
 		this.uri = new URI(uri);
 	}
+	
+	public static class RestResponse {
+		public final int statusCode;
+		public final String responseBody;
+		public RestResponse(int status, String responseString) {
+			this.statusCode = status;
+			this.responseBody = responseString;
+		}
+		/*
+		 * Following helper methods should be called when the status is 200, mostly.
+		 */
+		public JsonNode asJsonNode() throws JsonProcessingException, IOException {
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.readTree(this.responseBody);
+		}
+	}
+	
 	
 	public static WeakRestClient get(String uri) throws URISyntaxException {
 		WeakRestClient restClient = new WeakRestClient(uri);
@@ -114,34 +152,8 @@ public class WeakRestClient {
 		return this;
 	}
 	
-	public WeakRestClient bodyAsJsonNode(JsonNode jsonNode) throws UnsupportedEncodingException, JsonProcessingException {
-		if(this.requestType == RequestType.ENTITY_ENCLOSING) {
-			final ObjectMapper mapper = new ObjectMapper();
-			final Object o = mapper.treeToValue(jsonNode, Object.class);
-			final String contents = mapper.writeValueAsString(o);
-			System.out.println(contents);
-			this.httpEntityEnclosingRequestBase.setEntity(new StringEntity(contents));
-		}
-		if(this.requestType == RequestType.NON_ENTITY_ENCLOSING)
-			System.out.println("Entity enclosing not supported in this type of http method: " + this.httpRequestBase.getMethod());
-		return this;
-	}
 	
-	public static class RestResponse {
-		public final int statusCode;
-		public final String responseBody;
-		public RestResponse(int status, String responseString) {
-			this.statusCode = status;
-			this.responseBody = responseString;
-		}
-		/*
-		 * Following helper methods should be called when the status is 200, mostly.
-		 */
-		public JsonNode asJsonNode() throws JsonProcessingException, IOException {
-			ObjectMapper mapper = new ObjectMapper();
-			return mapper.readTree(this.responseBody);
-		}
-	}
+	
 	
 	public RestResponse execute() throws URISyntaxException, ClientProtocolException, IOException {
 		if(this.requestType == RequestType.NON_ENTITY_ENCLOSING) {
@@ -171,5 +183,21 @@ public class WeakRestClient {
 		
 		return restResponse;
 	}
+	
+	public WeakRestClient bodyAsJsonNode(JsonNode jsonNode) throws UnsupportedEncodingException, JsonProcessingException {
+		if(this.requestType == RequestType.ENTITY_ENCLOSING) {
+			final ObjectMapper mapper = new ObjectMapper();
+			final Object o = mapper.treeToValue(jsonNode, Object.class);
+			final String contents = mapper.writeValueAsString(o);
+			System.out.println(contents);
+			this.httpEntityEnclosingRequestBase.setEntity(new StringEntity(contents));
+		}
+		if(this.requestType == RequestType.NON_ENTITY_ENCLOSING)
+			System.out.println("Entity enclosing does not support in this type of http method: " + this.httpRequestBase.getMethod());
+		return this;
+	}
+	
+	
+	
 }
 
