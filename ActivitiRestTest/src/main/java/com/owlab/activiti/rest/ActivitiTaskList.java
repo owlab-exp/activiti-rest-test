@@ -1,5 +1,7 @@
 package com.owlab.activiti.rest;
 
+
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -8,6 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.http.auth.AuthenticationException;
 import org.apache.http.client.ClientProtocolException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,26 +18,26 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.owlab.util.JsonNodeUtil;
 import com.owlab.util.WeakRestClient;
 
-public class Tasks {
+
+public class ActivitiTaskList {
 	private String activitiServiceUri;
 
-	public Tasks(String activitiServiceUri) {
+	public ActivitiTaskList(String activitiServiceUri) {
 		this.activitiServiceUri = activitiServiceUri;
 	}
 
 	public JsonNode getToDoListOverJson(JsonNode requestNode, String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException,
-			URISyntaxException, IOException {
+			URISyntaxException, IOException, AuthenticationException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
-		JsonNode isForFinishedTasks = requestNode.path("isFinishedTasks");
+		JsonNode queryWaitingOrFinished = requestNode.path("queryWaitingOrFinished");
 		// if (typeOfTasks.isMissingNode() || typeOfTasks.isNull()) {
 		//
 		// } else if (typeOfTasks.asText().equalsIgnoreCase("false")) {
-		if (isForFinishedTasks.isMissingNode() || isForFinishedTasks.isNull() || !isForFinishedTasks.asBoolean()) {
+		if (queryWaitingOrFinished.isMissingNode() || queryWaitingOrFinished.isNull() || queryWaitingOrFinished.asText().equals("waiting")) {
 			// default request, return not completed tasks
 			JsonNode filterContainer = makeFilterForUnfinishedTasks(requestNode, authId);
 			// JsonNode hasFilter = filterContainer.path("hasFilter");
@@ -80,7 +83,7 @@ public class Tasks {
 
 			result.put("statusCode", 200);
 			// to resend previous query type
-			result.put("isFinishedTasks", requestNode.path("isFinishedTasks").asBoolean());
+			result.put("queryWaitingOrFinished", queryWaitingOrFinished.asText());
 			// to set possible filter data on UI
 			result.set("taskCategories", taskCategories);
 			result.set("candidateUsersOrGroups", candidateUsersOrGroups);
@@ -93,7 +96,7 @@ public class Tasks {
 			// to draw task list table
 			result.set("taskTablePage", taskListPage);
 
-		} else if (isForFinishedTasks.asBoolean()) {
+		} else if (queryWaitingOrFinished.asText().equals("finished")) {
 			// return finished tasks
 			JsonNode filterContainer = makeFilterForFinishedTasks(requestNode, authId);
 
@@ -129,7 +132,7 @@ public class Tasks {
 
 			result.put("statusCode", 200);
 			// to resend previous query type
-			result.put("isFinishedTasks", requestNode.path("isFinishedTasks").asBoolean());
+			result.put("queryWaitingOrFinished", queryWaitingOrFinished.asText());
 			// to set possible filter data on UI
 			result.set("taskCategories", taskCategories);
 
@@ -390,13 +393,15 @@ public class Tasks {
 	}
 
 	public JsonNode postCandidateOrAssignedTasks(JsonNode filter, String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException,
-			URISyntaxException, IOException {
+			URISyntaxException, IOException, AuthenticationException {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
 		// JsonNodeUtil.beautifulPrint(filter);
 		String endPointExt = "/query/tasks";
-		WeakRestClient.RestResponse response = WeakRestClient.post(this.activitiServiceUri + endPointExt).header("content-type", "application/json").basicAuth(authId, authPassword)
+		WeakRestClient.RestResponse response = WeakRestClient.post(this.activitiServiceUri + endPointExt)
+				.header("content-type", "application/json")
+				.basicAuth(authId, authPassword)
 				.bodyAsJsonNode(filter)
 				// .body(filter.toString())
 				.execute();
@@ -411,7 +416,7 @@ public class Tasks {
 		return result;
 	}
 
-	public int getCandidateOrAssignedTasksTotalSize(String authId, String authPassword) throws JsonProcessingException, IOException, URISyntaxException {
+	public int getCandidateOrAssignedTasksTotalSize(String authId, String authPassword) throws JsonProcessingException, IOException, URISyntaxException, AuthenticationException {
 		int totalSize = -1;
 		// String serviceBase = "http://localhost:8080/activiti-rest/service";
 		String endPointExt = "/runtime/tasks";
@@ -425,7 +430,7 @@ public class Tasks {
 		return totalSize;
 	}
 
-	public JsonNode getBasicListsForFilteringOfCandidateOrAssignedTasks(int totalTasksSize, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getBasicListsForFilteringOfCandidateOrAssignedTasks(int totalTasksSize, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -588,7 +593,7 @@ public class Tasks {
 	}
 
 	public JsonNode postFinishedTasks(JsonNode filter, String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException,
-			IOException {
+			IOException, AuthenticationException {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -606,7 +611,7 @@ public class Tasks {
 		return result;
 	}
 
-	public int getFinishedTasksTotalSize(String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException {
+	public int getFinishedTasksTotalSize(String authId, String authPassword) throws ClientProtocolException, UnsupportedEncodingException, JsonProcessingException, URISyntaxException, IOException, AuthenticationException {
 		int totalSize = -1;
 
 		String endPointExt = "/history/historic-task-instances";
@@ -624,7 +629,7 @@ public class Tasks {
 		return totalSize;
 	}
 
-	public JsonNode getBasicListsForFilteringOfFinishedTasks(int totalTasksSize, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getBasicListsForFilteringOfFinishedTasks(int totalTasksSize, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -736,7 +741,7 @@ public class Tasks {
 		return result;
 	}
 
-	public JsonNode getProcessKeyNameCategories(JsonNode processDefinitionUrls, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getProcessKeyNameCategories(JsonNode processDefinitionUrls, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		final ObjectMapper mapper = new ObjectMapper();
 		ObjectNode result = mapper.createObjectNode();
 
@@ -862,7 +867,7 @@ public class Tasks {
 	//
 	// }
 
-	public JsonNode getIdentityLinksOfTasks(JsonNode taskUrls, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getIdentityLinksOfTasks(JsonNode taskUrls, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		if (taskUrls == null || !taskUrls.isArray()) {
 			return null;
 		}
@@ -883,7 +888,7 @@ public class Tasks {
 		return identityLinks;
 	}
 
-	public JsonNode getIdentityLinksOfATask(JsonNode taskUrl, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getIdentityLinksOfATask(JsonNode taskUrl, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		if (taskUrl == null || taskUrl.isArray())
 			return null;
 
@@ -897,7 +902,7 @@ public class Tasks {
 		}
 	}
 
-	public JsonNode getUserInfo(String userId, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getUserInfo(String userId, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		if (userId == null)
 			return null;
 		String endPointExt = "/identity/users";
@@ -910,7 +915,7 @@ public class Tasks {
 		}
 	}
 
-	public JsonNode getGroupInfo(String groupId, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getGroupInfo(String groupId, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		if (groupId == null)
 			return null;
 		String endPointExt = "/identity/groups";
@@ -923,7 +928,7 @@ public class Tasks {
 		}
 	}
 
-	public JsonNode getCandidateUsersOrGroups(JsonNode identityLinks, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException {
+	public JsonNode getCandidateUsersOrGroups(JsonNode identityLinks, String authId, String authPassword) throws ClientProtocolException, URISyntaxException, IOException, AuthenticationException {
 		if (identityLinks == null || !identityLinks.isArray())
 			return null;
 
@@ -970,3 +975,5 @@ public class Tasks {
 		return rootNode;
 	}
 }
+
+

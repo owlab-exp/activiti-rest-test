@@ -18,13 +18,13 @@ import com.owlab.util.JsonNodeUtil;
 
 
 public class TasksTest {
-	private static Tasks tasks;
+	private static ActivitiTasks tasks;
 	private static ObjectMapper mapper; 
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		//tasks = new Tasks("http://58.237.227.195:28081/activiti-rest/service");
-		tasks = new Tasks("http://localhost:8080/activiti-rest/service");
+		tasks = new ActivitiTasks("http://58.237.227.195:28081/activiti-rest/service");
+		//tasks = new ActivitiTasks("http://localhost:8080/activiti-rest/service");
 		mapper = new ObjectMapper();
 		
 	}
